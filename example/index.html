@@ -44,7 +44,7 @@
 
 <br />
 
-Select form, what is your favorite color: <span id="select-edit">Blue</span>
+Select form, what is your favorite color: <span id="select-edit" style="background-color:blue">Blue</span>
 
 
 <script type="text/javascript" src="jquery-1.9.1.min.js"></script>
@@ -52,6 +52,10 @@ Select form, what is your favorite color: <span id="select-edit">Blue</span>
 <script type="text/javascript">
 	var cb = function( data ) {
 		console.log( data );
+	};
+
+	var change_bg_color = function( data ) {
+		$( '#' + data.id ).css( 'background-color', data.new_value );
 	};
 	$( "#text-edit" ).eip( /* "save.php" */ null, { select_text: true, form_buttons: '', on_save_success_cb: cb } );
 	$( "#textarea-edit" ).eip( /* "save.php" */ null, {
@@ -66,7 +70,9 @@ Select form, what is your favorite color: <span id="select-edit">Blue</span>
 			black	: "Black",
 			brown	: "Brown",
 			white	: "White"
-		}
+		},
+		form_buttons: '',
+		on_save_success_cb: change_bg_color
 	} );
 </script>
 

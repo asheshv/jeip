@@ -50,11 +50,14 @@ Select form, what is your favorite color: <span id="select-edit">Blue</span>
 <script type="text/javascript" src="jquery-1.9.1.min.js"></script>
 <script type="text/javascript" src="../jeip.js"></script>
 <script type="text/javascript">
-	$( "#text-edit" ).eip( "save.php", { select_text: true } );
-	$( "#textarea-edit" ).eip( "save.php", { 
+	var cb = function( data ) {
+		console.log( data );
+	};
+	$( "#text-edit" ).eip( /* "save.php" */ null, { select_text: true, form_buttons: '', on_save_success_cb: cb } );
+	$( "#textarea-edit" ).eip( /* "save.php" */ null, {
 		form_type: "textarea"
 	} );
-	$( "#select-edit" ).eip( "save.php", {
+	$( "#select-edit" ).eip( /* "save.php" */ null, {
 		form_type: "select",
 		select_options: {
 			blue	: "Blue",

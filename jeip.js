@@ -1,4 +1,7 @@
 /*
+Copyright (c) 2014 Ashesh Vashi
+*/
+/*
 Copyright (c) 2008 Joseph Scott, http://josephscott.org/
 
 Permission is hereby granted, free of charge, to any person obtaining
@@ -21,60 +24,59 @@ OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-// version: 0.2.0
+// version: 0.2.1
 
 (function( $ ) {
 	$.fn.eip = function( save_url, options ) {
 		// Defaults
 		var opt = {
-			save_url			: save_url,
+			save_url            : save_url,
 
-			save_on_enter		: true,
-			cancel_on_esc		: true,
-			focus_edit			: true,
-			select_text			: false,
-			edit_event			: "click",
-			select_options		: false,
-			data				: false,
+			focus_edit          : true,
+			select_text         : false,
+			edit_event          : "click",
+			select_options      : false,
+			data                : false,
 
-			form_type			: "text", // text, textarea, select
-			size				: false, // calculate at run time
-			max_size			: 60,
-			rows				: false, // calculate at run time
-			max_rows			: 10,
-			cols				: 60,
+			form_type           : "text", // text, textarea, select
+			size                : false, // calculate at run time
+			max_size            : 60,
+			rows                : false, // calculate at run time
+			max_rows            : 10,
+			cols                : 60,
 
-			savebutton_text		: "SAVE",
-			savebutton_class	: "jeip-savebutton",
-			cancelbutton_text	: "CANCEL",
-			cancelbutton_class	: "jeip-cancelbutton",
+			savebutton_text     : "SAVE",
+			savebutton_class    : "jeip-savebutton",
+			cancelbutton_text   : "CANCEL",
+			cancelbutton_class  : "jeip-cancelbutton",
 
-			mouseover_class		: "jeip-mouseover",
-			editor_class		: "jeip-editor",
-			editfield_class		: "jeip-editfield",
+			mouseover_class     : "jeip-mouseover",
+			editor_class        : "jeip-editor",
+			editfield_class     : "jeip-editfield",
 
-			saving_text			: "Saving ...",
-			saving_class		: "jeip-saving",
+			saving_text         : "Saving ...",
+			saving_class        : "jeip-saving",
 
-			saving				: '<span id="saving-#{id}" class="#{saving_class}" style="display: none;">#{saving_text}</span>',
+			saving              : '<span id="jeip-saving-#{id}" class="#{saving_class}" style="display: none;">#{saving_text}</span>',
 
-			start_form			: '<span id="editor-#{id}" class="#{editor_class}" style="display: none;">',
-			form_buttons		: '<span><input type="button" id="save-#{id}" class="#{savebutton_class}" value="#{savebutton_text}" /> OR <input type="button" id="cancel-#{id}" class="#{cancelbutton_class}" value="#{cancelbutton_text}" /></span>',
-			stop_form			: '</span>',
+			start_form          : '<span id="jeip-editor-#{id}" class="#{editor_class}" style="display: none;">',
+			form_buttons        : '<span><input type="button" id="jeip-save-#{id}" class="#{savebutton_class}" value="#{savebutton_text}" /> OR <input type="button" id="jeip-cancel-#{id}" class="#{cancelbutton_class}" value="#{cancelbutton_text}" /></span>',
+			stop_form           : '</span>',
 
-			text_form			: '<input type="text" id="edit-#{id}" class="#{editfield_class}" value="#{value}" /> <br />',
-			textarea_form		: '<textarea cols="#{cols}" rows="#{rows}" id="edit-#{id}" class="#{editfield_class}">#{value}</textarea> <br />',
-			start_select_form	: '<select id="edit-#{id}" class="#{editfield_class}">',
-			select_option_form	: '<option id="edit-option-#{id}-#{option_value}" value="#{option_value}" #{selected}>#{option_text}</option>',
-			stop_select_form	: '</select>',
-
-			after_save			: function( self ) {
+			text_form           : '<input type="text" id="jeip-edit-#{id}" class="#{editfield_class}" value="#{value}" />',
+			textarea_form       : '<textarea cols="#{cols}" rows="#{rows}" id="jeip-edit-#{id}" class="#{editfield_class}">#{value}</textarea><br/>',
+			start_select_form   : '<select id="jeip-edit-#{id}" class="#{editfield_class}">',
+			select_option_form  : '<option id="jeip-edit-opt-#{id}-#{option_value}" value="#{option_value}" #{selected}>#{option_text}</option>',
+			stop_select_form    : '</select>',
+			on_save_success_cb  : null,
+			validate_cb         : null,
+			after_save          : function( self ) {
 				for( var i = 0; i < 2; i++ ) {
 					$( self ).fadeOut( "fast" );
 					$( self ).fadeIn( "fast" );
 				}
 			},
-			on_error			: function( msg ) {
+			on_error            : function( msg ) {
 				alert( "Error: " + msg );
 			}
 		}; // defaults
@@ -101,25 +103,25 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 			$( self ).removeClass( opt.mouseover_class );
 			$( self ).fadeOut( "fast", function( e ) {
-				var id		= self.id;
-				var value	= $( self ).html( );
+				var id    = self.id;
+				var value = $( self ).html( );
 
-				var safe_value	= value.replace( /</g, "&lt;" );
-				safe_value		= value.replace( />/g, "&gt;" );
-				safe_value		= value.replace( /"/g, "&qout;" );
+				var safe_value = value.replace( /</g, "&lt;" );
+				safe_value     = value.replace( />/g, "&gt;" );
+				safe_value     = value.replace( /"/g, "&quot;" );
 
 				var orig_option_value = false;
 
 				var form = _template( opt.start_form, {
-					id				: self.id,
-					editor_class	: opt.editor_class
+					id           : self.id,
+					editor_class : opt.editor_class
 				} );
 
 				if( opt.form_type == 'text' ) {
 					form += _template( opt.text_form, {
-						id				: self.id,
-						editfield_class	: opt.editfield_class,
-						value			: value
+						id              : self.id,
+						editfield_class : opt.editfield_class,
+						value           : value
 					} );
 				} // text form
 				else if( opt.form_type == 'textarea' ) {
@@ -141,17 +143,17 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 					rows = parseInt( rows );
 
 					form += _template( opt.textarea_form, {
-						id				: self.id,
-						cols			: opt.cols,
-						rows			: rows,
-						editfield_class	: opt.editfield_class,
-						value			: value
+						id              : self.id,
+						cols            : opt.cols,
+						rows            : rows,
+						editfield_class : opt.editfield_class,
+						value           : value
 					} );
 				} // textarea form
 				else if( opt.form_type == 'select' ) {
 					form += _template( opt.start_select_form, {
-						id				: self.id,
-						editfield_class	: opt.editfield_class
+						id              : self.id,
+						editfield_class : opt.editfield_class
 					} );
 
 					$.each( opt.select_options, function( k, v ) {
@@ -165,10 +167,10 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 						}
 
 						form += _template( opt.select_option_form, {
-							id			: self.id,
-							option_value: k,
-							option_text	: v,
-							selected	: selected
+							id           : self.id,
+							option_value : k,
+							option_text  : v,
+							selected     : selected
 						} );
 					} );
 
@@ -176,43 +178,43 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 				} // select form
 
 				form += _template( opt.form_buttons, {
-					id					: self.id,
-					savebutton_class	: opt.savebutton_class,
-					savebutton_text		: opt.savebutton_text,
-					cancelbutton_class	: opt.cancelbutton_class,
-					cancelbutton_text	: opt.cancelbutton_text
+					id                 : self.id,
+					savebutton_class   : opt.savebutton_class,
+					savebutton_text    : opt.savebutton_text,
+					cancelbutton_class : opt.cancelbutton_class,
+					cancelbutton_text  : opt.cancelbutton_text
 				} );
 
 				form += _template( opt.stop_form, { } );
 
 				$( self ).after( form );
-				$( "#editor-" + self.id ).fadeIn( "fast" );
+				$( "#jeip-editor-" + self.id ).fadeIn( "fast" );
 
 				if( opt.focus_edit ) {
-					$( "#edit-" + self.id ).focus( );
+					$( "#jeip-edit-" + self.id ).focus( );
 				}
 
 				if( opt.select_text ) {
-					$( "#edit-" + self.id ).select( );
+					$( "#jeip-edit-" + self.id ).select( );
 				}
 
-				$( "#cancel-" + self.id ).bind( "click", function( e ) {
+				$( "#jeip-cancel-" + self.id ).bind( "click", function( e ) {
 					_cancelEdit( self );
 				} );
 
-				$( "#edit-" + self.id ).keydown( function( e ) {
+				$( "#jeip-edit-" + self.id ).keydown( function( e ) {
 					// cancel
-					if( e.which == 27 ) {
+					if( e.which == 27) {
 						_cancelEdit( self );
 					}
 
 					// save
-					if( opt.form_type != "textarea" && e.which == 13 ) {
+					if( e.which == 13 && ( opt.form_type != "textarea" || e.shiftKey ) ) {
 						_saveEdit( self, orig_option_value );
 					}
 				} );
 
-				$( "#save-" + self.id ).bind( "click", function( e ) {
+				$( "#jeip-save-" + self.id ).bind( "click", function( e ) {
 					return _saveEdit( self, orig_option_value );
 				} ); // save click
 			} ); // this fadeOut
@@ -230,8 +232,8 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 		}
 
 		var _cancelEdit = function( self ) {
-			$( "#editor-" + self.id ).fadeOut( "fast" );
-			$( "#editor-" + self.id ).remove( );
+			$( "#jeip-editor-" + self.id ).fadeOut( "fast" );
+			$( "#jeip-editor-" + self.id ).remove( );
 
 			$( self ).bind( opt.edit_event, function( e ) {
 				_editMode( self );
@@ -239,15 +241,15 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 			$( self ).removeClass( opt.mouseover_class );
 			$( self ).fadeIn( "fast" );
-		};
-		
+		}; // _cancelEdit
+
 		var _saveEdit = function( self, orig_option_value ) {
 			var orig_value = $( self ).html( );
-			var new_value = $( "#edit-" + self.id ).prop( "value" );
+			var new_value = $( "#jeip-edit-" + self.id ).prop( "value" );
 
 			if( orig_value == new_value ) {
-				$( "#editor-" + self.id ).fadeOut( "fast" );
-				$( "#editor-" + self.id ).remove( );
+				$( "#jeip-editor-" + self.id ).fadeOut( "fast" );
+				$( "#jeip-editor-" + self.id ).remove( );
 
 				$( self ).bind( opt.edit_event, function( e ) {
 					_editMode( self );
@@ -259,65 +261,112 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 				return true;
 			}
 
-			$( "#editor-" + self.id ).after( _template( opt.saving, {
-				id			: self.id,
-				saving_class: opt.saving_class,
-				saving_text	: opt.saving_text
-			} ) );
-			$( "#editor-" + self.id ).fadeOut( "fast", function( ) {
-				$( "#saving-" + self.id).fadeIn( "fast" );
-			} );
-
 			var ajax_data = {
-				url			: location.href,
-				id			: self.id,
-				form_type	: opt.form_type,
-				orig_value	: orig_value,
-				new_value	: $( "#edit-" + self.id ).prop( "value" ),
-				data		: opt.data
+				url        : location.href,
+				id         : self.id,
+				form_type  : opt.form_type,
+				orig_value : orig_value,
+				new_value  : $( "#jeip-edit-" + self.id ).prop( "value" ),
+				data       : opt.data
 			}
 
 			if( opt.form_type == 'select' ) {
 				ajax_data.orig_option_value = orig_option_value;
 				ajax_data.orig_option_text = orig_value;
-				ajax_data.new_option_text = $( "#edit-option-" + self.id + "-" + new_value ).html( );
+				ajax_data.new_option_text = $( "#jeip-edit-opt-" + self.id + "-" + new_value ).html( );
 			}
 
-			$.ajax( {
-				url		: opt.save_url,
-				type	: "POST",
-				dataType: "json",
-				data	: ajax_data,
-				success	: function( data ) {
-					$( "#editor-" + self.id ).fadeOut( "fast" );
-					$( "#editor-" + self.id ).remove( );
+			if( opt.validate_cb ) {
+				var err = opt.validate_cb( ajax_data );
 
-					if( data.is_error == true ) {
-						opt.on_error( data.error_text );
-					}
-					else {
-						$( self ).html( data.html );
-					}
+				if( err ) {
+					opt.on_error( err );
+					return false;
+				}
+			}
 
-					$( "#saving-" + self.id ).fadeOut( "fast" );
-					$( "#saving-" + self.id ).remove( );
+			if( opt.save_url ) {
+				$( "#jeip-editor-" + self.id ).after( _template( opt.saving, {
+					id           : self.id,
+					saving_class : opt.saving_class,
+					saving_text  : opt.saving_text
+				} ) );
 
-					$( self ).bind( opt.edit_event, function( e ) {
-						_editMode( self );
-					} );
+				$( "#jeip-editor-" + self.id ).fadeOut( "fast", function( ) {
+					$( "#jeip-saving-" + self.id).fadeIn( "fast" );
+				} );
+			}
+			else {
+				$( "#jeip-editor-" + self.id ).fadeOut( "fast" );
+			}
 
-					$( self ).addClass( opt.mouseover_class );
-					$( self ).fadeIn( "fast" );
+			if( opt.save_url ) {
+				$.ajax( {
+					url      : opt.save_url,
+					type     : "POST",
+					dataType : "json",
+					data     : ajax_data,
+					success  : function( data ) {
+						$( "#jeip-editor-" + self.id ).fadeOut( "fast" );
+						$( "#jeip-editor-" + self.id ).remove( );
 
-					if( opt.after_save != false ) {
-						opt.after_save( self );
-					}
+						if( data.is_error == true ) {
+							opt.on_error( data.error_text );
+						}
+						else {
+							$( self ).html( data.html );
+						}
 
-					$( self ).removeClass( opt.mouseover_class );
-				} // success
-			} ); // ajax
+						$( "#jeip-saving-" + self.id ).fadeOut( "fast" );
+						$( "#jeip-saving-" + self.id ).remove( );
+
+						$( self ).bind( opt.edit_event, function( e ) {
+							_editMode( self );
+						} );
+
+						$( self ).addClass( opt.mouseover_class );
+						$( self ).fadeIn( "fast" );
+
+						if( opt.after_save != false ) {
+							opt.after_save( self );
+						}
+
+						$( self ).removeClass( opt.mouseover_class );
+
+						if ( opt.on_save_success_cb ) {
+							opt.on_save_success_cb( data );
+						}
+					} // success
+				} ); // ajax
+			} else {
+
+				$( "#jeip-editor-" + self.id ).fadeOut( "fast" );
+				$( "#jeip-editor-" + self.id ).remove( );
+
+				var value = ajax_data.new_value;
+				if( opt.form_type == 'select' ) {
+					value = ajax_data.new_option_text;
+				}
+				$( self ).html( value );
+
+				$( self ).bind( opt.edit_event, function( e ) {
+					_editMode( self );
+				} );
+
+				$( self ).addClass( opt.mouseover_class );
+				$( self ).fadeIn( "fast" );
+
+				if( opt.after_save != false ) {
+					opt.after_save( self );
+				}
+
+				$( self ).removeClass( opt.mouseover_class );
+
+				if ( opt.on_save_success_cb ) {
+					opt.on_save_success_cb( ajax_data );
+				}
+			}
 		}; // _saveEdit
-
 
 	}; // inplaceEdit
 })( jQuery );
